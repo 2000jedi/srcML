@@ -229,6 +229,15 @@ void srcMLOutput::consume(const char* language, const char* revision, const char
             // end token
             } else if (isend(token)) {
 
+                // Defensive: if the parser emits a stray end token with no
+                // matching start on the stack (observed on some inputs when
+                // position tracking is enabled), top() is UB on an empty
+                // std::stack — skip the unmatched end token instead of
+                // crashing.  See backtrace through TokenRefCount<Token>.
+                if (startElementStack.empty()) {
+                    continue;
+                }
+
                 // most recent start token that will match the current end token
                 auto matchingStartElement = startElementStack.top();
                 startElementStack.pop();
