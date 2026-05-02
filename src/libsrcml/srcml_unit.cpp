@@ -1215,12 +1215,20 @@ int srcml_write_start_unit(struct srcml_unit* unit) {
     unit->content_begin = unit->unit_translator->output_buffer()->written + 1;
 
     // record end of content (after xmlns for srcML)
+    // when SRCML_OPTION_NAMESPACE_DECL is disabled the start tag has no xmlns,
+    // so leave insert_begin/insert_end as 0 (a no-op range for outer fragment construction)
     std::string_view s = (const char*) xmlBufferContent(unit->output_buffer);
     auto pos = s.find("xmlns");
-    unit->insert_begin = (int) pos;
-    auto firstquotePos = s.find("\"", pos + 1);
-    auto secondquotePos = s.find("\"", firstquotePos + 1);
-    unit->insert_end = (int) secondquotePos + 2;
+    if (pos != std::string_view::npos) {
+        auto firstquotePos = s.find("\"", pos + 1);
+        if (firstquotePos != std::string_view::npos) {
+            auto secondquotePos = s.find("\"", firstquotePos + 1);
+            if (secondquotePos != std::string_view::npos) {
+                unit->insert_begin = (int) pos;
+                unit->insert_end = (int) secondquotePos + 2;
+            }
+        }
+    }
 
     return SRCML_STATUS_OK;
 }

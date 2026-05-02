@@ -467,9 +467,15 @@ void start_unit(void* ctx, const xmlChar* localname, const xmlChar* prefix, cons
         if (!state->context->is_archive) {
             std::string_view s = state->unitsrcml;
             auto xmlnsPos = s.find("xmlns");
-            auto firstquote = s.find("\"", xmlnsPos + 1);
-            auto secondquote = s.find("\"", firstquote + 1);
-            state->insert_end = (int) secondquote + 2;
+            if (xmlnsPos != std::string_view::npos) {
+                auto firstquote = s.find("\"", xmlnsPos + 1);
+                if (firstquote != std::string_view::npos) {
+                    auto secondquote = s.find("\"", firstquote + 1);
+                    if (secondquote != std::string_view::npos) {
+                        state->insert_end = (int) secondquote + 2;
+                    }
+                }
+            }
         }
     }
 
